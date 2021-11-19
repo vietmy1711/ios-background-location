@@ -16,13 +16,31 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
         print("LASTTIMECALLED \(UserDefaults.standard.value(forKey: "LASTTIMECALLED"))")
-        
         locationManager.requestAlwaysAuthorization()
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
         locationManager.allowsBackgroundLocationUpdates = true
+        locationManager.pausesLocationUpdatesAutomatically = false
         locationManager.startUpdatingLocation()
         locationManager.startMonitoringSignificantLocationChanges()
+        
+        if launchOptions?[UIApplication.LaunchOptionsKey.location] != nil {
+            var request = URLRequest(url: URL(string: "https://planet-zoo.herokuapp.com/api/planetzoo/animals")!)
+            request.httpMethod = "GET"
+            request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+            
+            let session = URLSession.shared
+            let task = session.dataTask(with: request, completionHandler: { data, response, error -> Void in
+                let httpResponse = response as! HTTPURLResponse
+                if httpResponse.statusCode == 200 {
+                    let date = Date()
+                    let dateFormatter = DateFormatter()
+                    dateFormatter.dateFormat = "YY, MMM d, HH:mm:ss"
+                    UserDefaults.standard.set("\(dateFormatter.string(from: date)) in terminated", forKey: "LASTTIMECALLED")
+                }
+            })
+            task.resume()
+        }
         
         return true
     }
@@ -43,7 +61,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         print("Locations: \(locations.last)")
-        var request = URLRequest(url: URL(string: "https://6192c75dd3ae6d0017da82a8.mockapi.io/sendpost")!)
+        var request = URLRequest(url: URL(string: "https://planet-zoo.herokuapp.com/api/planetzoo/animals")!)
         request.httpMethod = "GET"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         
