@@ -46,6 +46,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
                     UserDefaults.standard.set("\(dateFormatter.string(from: date)) in terminated", forKey: "LASTTIMECALLED")
                     let content      = UNMutableNotificationContent()
                     content.title    = "API CALLED"
+                    content.body = "http Status code\(httpResponse.statusCode)"
                     content.sound    = .default
                     let request = UNNotificationRequest(identifier: "1", content: content, trigger: nil)
                     UNUserNotificationCenter.current().add(request)
@@ -85,7 +86,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
                 dateFormatter.dateFormat = "YY, MMM d, HH:mm:ss"
                 UserDefaults.standard.set(dateFormatter.string(from: date), forKey: "LASTTIMECALLED")
                 let content      = UNMutableNotificationContent()
-                content.title    = "API CALLED"
+                content.title = "API CALLED"
+                content.body = "http Status code\(httpResponse.statusCode)"
                 content.sound    = .default
                 let request = UNNotificationRequest(identifier: "1", content: content, trigger: nil)
                 UNUserNotificationCenter.current().add(request)
