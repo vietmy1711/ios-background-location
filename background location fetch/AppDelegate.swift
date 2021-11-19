@@ -7,6 +7,7 @@
 
 import UIKit
 import CoreLocation
+import UserNotifications
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate {
@@ -16,6 +17,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
         print("LASTTIMECALLED \(UserDefaults.standard.value(forKey: "LASTTIMECALLED"))")
+        UNUserNotificationCenter.current().delegate = self
+        let manager = LocalNotificationManager()
+        manager.notifications = []
+        
+        manager.schedule()
+
         locationManager.requestAlwaysAuthorization()
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
@@ -37,6 +44,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
                     let dateFormatter = DateFormatter()
                     dateFormatter.dateFormat = "YY, MMM d, HH:mm:ss"
                     UserDefaults.standard.set("\(dateFormatter.string(from: date)) in terminated", forKey: "LASTTIMECALLED")
+                    let content      = UNMutableNotificationContent()
+                    content.title    = "API CALLED"
+                    content.sound    = .default
+                    let request = UNNotificationRequest(identifier: "1", content: content, trigger: nil)
+                    UNUserNotificationCenter.current().add(request)
                 }
             })
             task.resume()
@@ -64,7 +76,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
         var request = URLRequest(url: URL(string: "https://planet-zoo.herokuapp.com/api/planetzoo/animals")!)
         request.httpMethod = "GET"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        
         let session = URLSession.shared
         let task = session.dataTask(with: request, completionHandler: { data, response, error -> Void in
             let httpResponse = response as! HTTPURLResponse
@@ -73,6 +84,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
                 let dateFormatter = DateFormatter()
                 dateFormatter.dateFormat = "YY, MMM d, HH:mm:ss"
                 UserDefaults.standard.set(dateFormatter.string(from: date), forKey: "LASTTIMECALLED")
+                let content      = UNMutableNotificationContent()
+                content.title    = "API CALLED"
+                content.sound    = .default
+                let request = UNNotificationRequest(identifier: "1", content: content, trigger: nil)
+                UNUserNotificationCenter.current().add(request)
             }
         })
         task.resume()
@@ -83,3 +99,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
     }
 }
 
+extension AppDelegate: UNUserNotificationCenterDelegate
+{
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void)
+    {
+        let id = response.notification.request.identifier
+        print("Received notification with ID = \(id)")
+        
+        completionHandler()
+    }
+    
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void)
+    {
+        let id = notification.request.identifier
+        print("Received notification with ID = \(id)")
+        
+        completionHandler([.sound])
+    }
+}
